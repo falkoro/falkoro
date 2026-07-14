@@ -26,6 +26,11 @@ Both merged by the maintainer with authorship preserved:
 
 ## Open fixes (all mergeable; sweeper salvageability=high)
 
+- **[#64525](https://github.com/NousResearch/hermes-agent/pull/64525)** —
+  `fix(toolsets)`: `disabled_toolsets: [browser]` silently stripped
+  `web_search` from every session (it was a member of both `browser` and
+  `web`, and disabled toolsets are a strict subtraction). Removed the
+  taxonomy overlap; preserved the `browser_tasks` RL distribution (#64503).
 - **[#60797](https://github.com/NousResearch/hermes-agent/pull/60797)** —
   `fix(lazy_deps)`: unpin `huggingface-hub` to a range so `hermes update`
   stops downgrading the shared dep under transformers/Hindsight (#60783).
