@@ -7,7 +7,7 @@ an actively-maintained OSS agent framework (~50 issues/PRs per day, maintainer
 by something actually executed (local repro, test run, or wire test) — not by
 reading the diff.
 
-_Last updated 2026-07-14._
+_Last updated 2026-07-16._
 
 ## Merged fixes (2/2 authored PRs merged)
 
@@ -24,13 +24,24 @@ Both merged by the maintainer with authorship preserved:
   Maintainer: _"Clean, conservative fix with a thorough test matrix."_
   Commit `9ad912a79` on `main`.
 
-## Open fixes (all mergeable; sweeper salvageability=high)
+## Open fixes (all mergeable, all CI-green; maintainer-bot reviews answered same-day)
 
+- **[#65452](https://github.com/NousResearch/hermes-agent/pull/65452)** —
+  `fix(toolsets)`: string-typed `disabled_toolsets` config (YAML-quoted or
+  bare scalar) was iterated per *character*, silently disabling nothing —
+  the full tool schema set went out on every model call (#61264, and the
+  schema-blowup contributor to #61265's multi-minute local-model stalls).
+  One shared coercion helper at the `get_tool_definitions()` funnel (which
+  also fixes memo-cache-key pollution) and the cron denylist merge, with a
+  loud misconfiguration warning and 12 regression tests.
 - **[#64525](https://github.com/NousResearch/hermes-agent/pull/64525)** —
   `fix(toolsets)`: `disabled_toolsets: [browser]` silently stripped
   `web_search` from every session (it was a member of both `browser` and
   `web`, and disabled toolsets are a strict subtraction). Removed the
-  taxonomy overlap; preserved the `browser_tasks` RL distribution (#64503).
+  taxonomy overlap (#64503). When the maintainer's review bot spotted that
+  independent distribution rolls dropped browser+web_search co-occurrence
+  from 97% to 94.09%, restored the exact coupling same-day with grouped
+  `"+"`-compound sampler entries plus deterministic co-occurrence tests.
 - **[#60797](https://github.com/NousResearch/hermes-agent/pull/60797)** —
   `fix(lazy_deps)`: unpin `huggingface-hub` to a range so `hermes update`
   stops downgrading the shared dep under transformers/Hindsight (#60783).
@@ -46,7 +57,8 @@ Both merged by the maintainer with authorship preserved:
   forensics instead of `signal=UNKNOWN` (#61596).
 - **[#60085](https://github.com/NousResearch/hermes-agent/pull/60085)** —
   `fix(tui)`: deliver kanban notify subscriptions to TUI/desktop sessions
-  (#59890).
+  (#59890). Rated salvageability=high by the maintainer's review bot; its
+  one request (poller-level wiring tests) was added the same day.
 
 ## Notable triage & root-cause work
 
