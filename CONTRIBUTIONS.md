@@ -7,11 +7,15 @@ an actively-maintained OSS agent framework (~50 issues/PRs per day, maintainer
 by something actually executed (local repro, test run, or wire test) — not by
 reading the diff.
 
-_Last updated 2026-07-16._
+_Last updated 2026-07-24._
 
-## Merged fixes (2/2 authored PRs merged)
+## Fixes landed on `main` (2)
 
-Both merged by the maintainer with authorship preserved:
+Both applied to `main` by the maintainer with authorship preserved. Note for
+anyone verifying: the maintainer applied these outside GitHub's merge button, so
+the PRs read as `CLOSED` with `mergedAt: null` and will **not** appear in a
+merged-PR count. The commits themselves are on `main` and are the ground truth —
+verify with `git log origin/main --author=falkoro`:
 
 - **[#58519](https://github.com/NousResearch/hermes-agent/pull/58519)** —
   `fix(config)`: env-ref snapshot invalidates `load_config()` cache when a
@@ -24,8 +28,26 @@ Both merged by the maintainer with authorship preserved:
   Maintainer: _"Clean, conservative fix with a thorough test matrix."_
   Commit `9ad912a79` on `main`.
 
-## Open fixes (all mergeable, all CI-green; maintainer-bot reviews answered same-day)
+## Open fixes (8, all mergeable; maintainer-bot reviews answered same-day)
 
+Kept rebased against a fast-moving `main` (~990 commits in the three days to
+2026-07-24). Mergeability is checked locally with
+`git merge-tree --write-tree --merge-base` rather than the API's `mergeable`
+field, which is computed lazily and reports `UNKNOWN` rather than a conflict.
+
+- **[#67023](https://github.com/NousResearch/hermes-agent/pull/67023)** —
+  `fix(tui)`: surface image-routing downgrades instead of silently sending a
+  text description (#66829). An `auto`-mode session that fell back to text —
+  including a user who had explicitly forced `native` on a Codex app-server
+  transport — got no signal at all; the only evidence was a gateway stderr
+  line. Adds a decision helper returning `(mode, downgrade_reason)`, a
+  `status.update` on every downgrade path, and a per-turn routing trace.
+  Rebase note: while this sat, upstream added a `requested_provider=` argument
+  to the exact `decide_image_input_mode()` call the PR replaces. Resolving the
+  conflict by dropping the superseded block — the mechanically clean
+  resolution — would have silently reverted that fix with no test failing.
+  The argument was ported into the helper and verified present in the final
+  diff.
 - **[#65452](https://github.com/NousResearch/hermes-agent/pull/65452)** —
   `fix(toolsets)`: string-typed `disabled_toolsets` config (YAML-quoted or
   bare scalar) was iterated per *character*, silently disabling nothing —
@@ -74,11 +96,13 @@ Both merged by the maintainer with authorship preserved:
   including a minimal s6-overlay container to disprove a claimed
   restart-persistence mechanism.
 
-## Community reviews (40+ threads)
+## Community reviews (49 threads on other contributors' work)
 
-Non-maintainer reviews across 40+ PR/issue threads. Method: git-protocol diffs
-(never the REST budget), duplicate sweeps before endorsing, and an empirical
-check of every load-bearing claim. Representative:
+Non-maintainer reviews and triage across 49 threads authored by other people
+(38 PRs + 9 issues; count from GraphQL `commenter:falkoro`, which unlike
+`gh search issues --commenter` does not under-report PR comments). Method:
+git-protocol diffs (never the REST budget), duplicate sweeps before endorsing,
+and an empirical check of every load-bearing claim. Representative:
 
 - **[#56927](https://github.com/NousResearch/hermes-agent/pull/56927)** — proved
   the SSRF redirect guard on `main` was **dead code** (httpx `response.next_request`
@@ -91,8 +115,34 @@ check of every load-bearing claim. Representative:
 - **[#62241](https://github.com/NousResearch/hermes-agent/pull/62241)** — caught
   a PR bundling three unrelated changes (one duplicating the author's own open
   PR); recommended unbundling.
+- **[#69895](https://github.com/NousResearch/hermes-agent/pull/69895)** —
+  A/B'd the branch against `main` with the models.dev catalog stubbed for
+  determinism, confirming `decide_image_input_mode` moves `"text"` → `"native"`
+  for a Nous vendor-qualified id while a text-only vendor still resolves
+  `False`. Adversarially probed the containment the author claimed (a non-Nous
+  provider whose model name merely contains a slash must not be reinterpreted
+  as a provider route) and confirmed it holds. Flagged one non-blocking
+  diagnostic defect: the new block calls a name bound by an import inside an
+  earlier `try:`, so an `ImportError` there produces a misleading "cannot
+  access local variable" log rather than the real cause — demonstrated with a
+  simulated `ImportError`.
+- **[#70091](https://github.com/NousResearch/hermes-agent/pull/70091)** —
+  a 744-line kanban-notifier ownership rewrite touching the opposite end of an
+  open PR of mine. Rather than claim a full logic review, built the actual
+  combined tree and ran both sides on it: 469 tests pass across the kanban
+  surface, no merge-order constraint. The comment states explicitly that this
+  is a composition check, not an endorsement of the ownership logic not
+  verified.
 - Multiple duplicate-arbitration comments (e.g. #62844 vs the canonical #43645)
   comparing PR heads programmatically and crediting the earlier author.
+
+A community member independently cherry-picked #60085 onto current `main` as
+**[#66435](https://github.com/NousResearch/hermes-agent/pull/66435)**,
+preserving the original `falkoro` authorship on both commits. Verified the
+salvage was faithful (byte-identical bar one blank line) and thanked them
+rather than rebasing #60085 to compete with it — a duplicate pair of mergeable
+PRs just pushes arbitration work onto the maintainer. #60085 is retained only
+as a fallback.
 
 Two authors returned to request re-review after addressing feedback
 ([#57849](https://github.com/NousResearch/hermes-agent/pull/57849),
